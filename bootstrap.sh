@@ -2,7 +2,7 @@
 #
 # fedora-setup bootstrap
 #
-# One-line install:
+# Install:
 #   curl -fsSL https://raw.githubusercontent.com/Fantasy1231/fedora-setup/main/bootstrap.sh | bash
 #
 # Pass options through with `-s --`, e.g.:
@@ -15,7 +15,10 @@ set -euo pipefail
 
 SCRIPT_URL="https://raw.githubusercontent.com/Fantasy1231/fedora-setup/main/fedora-setup.sh"
 
-command -v curl >/dev/null 2>&1 || { echo "error: curl is required" >&2; exit 1; }
+command -v curl >/dev/null 2>&1 || {
+  echo "error: curl is required" >&2
+  exit 1
+}
 
 tmp="$(mktemp)"
 trap 'rm -f "$tmp"' EXIT
@@ -27,7 +30,7 @@ curl -fsSL "$SCRIPT_URL" -o "$tmp"
 if [[ -t 0 ]]; then
   bash "$tmp" "$@"
 elif [[ -e /dev/tty ]]; then
-  bash "$tmp" "$@" < /dev/tty
+  bash "$tmp" "$@" </dev/tty
 else
   echo "warning: no terminal available; sudo prompts may fail" >&2
   bash "$tmp" "$@"
