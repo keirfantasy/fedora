@@ -8,18 +8,22 @@
       "2": "#7dcfff"
     },
     "padding": {
-      "right": 10,
-      "top": 6
+      "top": 0,
+      "right": 4
     }
   },
   "display": {
-    "separator": "➜   "
+    "separator": "➜   ",
+    "color": {
+      "output": "#c0caf5",
+      "separator": "#565f89"
+    }
   },
   "modules": [
     "break",
     {
       "type": "title",
-      "format": "                                {6}{7}{8}"
+      "format": "                                     {6}{7}{8}"
     },
     "break",
     {
@@ -28,75 +32,75 @@
     },
     "break",
     {
-      "key": "     OS           ",
-      "keyColor": "green",
-      "type": "os"
+      "type": "os",
+      "key": "  󰣇  OS       ",
+      "keyColor": "#7aa2f7"
     },
     {
-      "key": "    󰌢 Machine      ",
-      "keyColor": "cyan",
-      "type": "host"
+      "type": "host",
+      "key": "  󰌢  Machine  ",
+      "keyColor": "#7aaaf8"
     },
     {
-      "key": "     Kernel       ",
-      "keyColor": "blue",
-      "type": "kernel"
+      "type": "kernel",
+      "key": "  󰌽  Kernel   ",
+      "keyColor": "#7bb1fa"
     },
     {
-      "key": "    󰅐 Uptime       ",
-      "keyColor": "green",
-      "type": "uptime"
+      "type": "uptime",
+      "key": "  󰅐  Uptime   ",
+      "keyColor": "#7cb8fb"
     },
     {
-      "key": "     Packages     ",
-      "keyColor": "cyan",
-      "type": "packages"
+      "type": "packages",
+      "key": "  󰏗  Packages ",
+      "keyColor": "#7cc0fc"
     },
     {
-      "key": "     WM           ",
-      "keyColor": "blue",
-      "type": "wm"
+      "type": "wm",
+      "key": "  󰖯  WM       ",
+      "keyColor": "#7cc8fe"
     },
     {
-      "key": "     Shell        ",
-      "keyColor": "green",
-      "type": "shell"
+      "type": "shell",
+      "key": "  󰞷  Shell    ",
+      "keyColor": "#7dcfff"
     },
     {
-      "key": "     Terminal     ",
-      "keyColor": "cyan",
-      "type": "terminal"
+      "type": "terminal",
+      "key": "  󰆍  Terminal ",
+      "keyColor": "#7dcfff"
     },
     {
-      "key": "     Font         ",
-      "keyColor": "blue",
-      "type": "terminalfont"
+      "type": "terminalfont",
+      "key": "  󰛖  Font     ",
+      "keyColor": "#87c6fe"
     },
     {
-      "key": "    󰻠 CPU          ",
-      "keyColor": "green",
-      "type": "cpu"
+      "type": "cpu",
+      "key": "  󰻠  CPU      ",
+      "keyColor": "#92bdfc"
     },
     {
-      "key": "    󰍛 GPU          ",
-      "keyColor": "cyan",
-      "type": "gpu"
+      "type": "gpu",
+      "key": "  󰍛  GPU      ",
+      "keyColor": "#9cb4fb"
     },
     {
-      "key": "    󰑭 Memory       ",
-      "keyColor": "blue",
-      "type": "memory"
+      "type": "memory",
+      "key": "  󰑭  Memory   ",
+      "keyColor": "#a6acfa"
     },
     {
-      "key": "     Network      ",
-      "keyColor": "green",
       "type": "command",
+      "key": "  󰛳  Network  ",
+      "keyColor": "#b1a3f8",
       "text": "iface=$(ip route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i==\"dev\"){print $(i+1);exit}}'); [ -z \"$iface\" ] && echo Disconnected || { [ -d \"/sys/class/net/$iface/wireless\" ] && echo \"Connected (WLAN)\" || echo \"Connected (LAN)\"; }"
     },
     {
-      "key": "    󰩟 Local IP     ",
-      "keyColor": "cyan",
       "type": "localip",
+      "key": "  󰩟  Local IP ",
+      "keyColor": "#bb9af7",
       "compact": true
     },
     "break",
@@ -107,7 +111,7 @@
     "break",
     {
       "type": "custom",
-      "format": "                           \u001b[38;2;247;118;142m● \u001b[38;2;255;122;102m● \u001b[38;2;255;158;100m● \u001b[38;2;255;189;94m● \u001b[38;2;224;175;104m● \u001b[38;2;215;224;106m● \u001b[38;2;158;206;106m● \u001b[38;2;115;218;202m● \u001b[38;2;85;212;196m● \u001b[38;2;125;207;255m● \u001b[38;2;86;182;224m● \u001b[38;2;122;162;247m● \u001b[38;2;106;127;216m● \u001b[38;2;157;124;216m● \u001b[38;2;187;154;247m● \u001b[38;2;198;120;221m●\u001b[0m"
+      "format": "                     \u001b[38;2;255;115;115m● \u001b[38;2;255;153;115m● \u001b[38;2;255;191;115m● \u001b[38;2;255;229;115m● \u001b[38;2;242;255;115m● \u001b[38;2;204;255;115m● \u001b[38;2;166;255;115m● \u001b[38;2;127;255;115m● \u001b[38;2;115;255;140m● \u001b[38;2;115;255;178m● \u001b[38;2;115;255;217m● \u001b[38;2;115;255;255m● \u001b[38;2;115;217;255m● \u001b[38;2;115;178;255m● \u001b[38;2;115;140;255m● \u001b[38;2;127;115;255m● \u001b[38;2;166;115;255m● \u001b[38;2;204;115;255m● \u001b[38;2;242;115;255m● \u001b[38;2;255;115;230m● \u001b[38;2;255;115;191m● \u001b[38;2;255;115;153m●\u001b[0m"
     }
   ]
 }
