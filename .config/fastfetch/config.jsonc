@@ -4,6 +4,9 @@
     "key": {
       "width": 10
     },
+    "size": {
+      "binaryPrefix": "jedec"
+    },
     "separator": ""
   },
   "logo": {
@@ -12,72 +15,68 @@
     "color": {
       "1": "#7aa2f7",
       "2": "#7dcfff"
-    },
-    "padding": {
-      "top": 1,
-      "left": 2
     }
   },
   "modules": [
     "break",
     {
-      "type": "command",
-      "key": "󰀄 USER",
-      "keyColor": "#7aa2f7",
-      "text": "echo $USER@$(hostnamectl hostname)"
-    },
-    {
       "type": "os",
-      "key": "󰣇 OS",
-      "keyColor": "#7ab0f8",
-      "format": "{name} {version-id}"
+      "key": "os",
+      "keyColor": "#e0af68",
+      "format": "{name}"
     },
     {
-      "type": "command",
-      "key": "󰌽 KER",
-      "keyColor": "#7dbdfb",
-      "text": "echo $(uname -r | cut -d- -f1) $(uname -m)"
+      "type": "kernel",
+      "key": "ker",
+      "keyColor": "#9ece6a"
     },
     {
       "type": "packages",
-      "key": "󰏗 PKG",
-      "keyColor": "#7dc4fc",
-      "format": "{all}"
-    },
-    {
-      "type": "terminal",
-      "key": "󰆍 TERM",
-      "keyColor": "#7dcbfe",
-      "format": "{pretty-name}"
+      "key": "pkgs",
+      "keyColor": "#7dcfff"
     },
     {
       "type": "shell",
-      "key": "󰞷 SH",
-      "keyColor": "#7dcfff",
+      "key": "sh",
+      "keyColor": "#7aa2f7",
+      "format": "{pretty-name}"
+    },
+    {
+      "type": "wm",
+      "key": "wm",
+      "keyColor": "#f7768e",
       "format": "{pretty-name}"
     },
     {
       "type": "uptime",
-      "keyColor": "#89ddff",
-      "key": "󰥔 UP"
+      "key": "up",
+      "keyColor": "#9ece6a"
+    },
+    {
+      "type": "cpu",
+      "key": "cpu",
+      "keyColor": "#bb9af7",
+      "format": "{name}"
     },
     {
       "type": "memory",
-      "key": "󰍛 RAM",
-      "keyColor": "#9ae6ff",
-      "format": "{used} / {total} ({percentage})"
+      "key": "ram",
+      "keyColor": "#e0af68",
+      "format": "{used} / {total}"
     },
     {
       "type": "disk",
-      "folders": "/",
-      "key": "󰋊 SSD",
-      "keyColor": "#b4f9f8",
-      "format": "{size-used} / {size-total} ({size-percentage})"
+      "key": "disk",
+      "keyColor": "#7dcfff",
+      "folders": [
+        "/"
+      ],
+      "format": "{size-used} / {size-total}"
     },
+    "break",
     {
       "type": "custom",
-      "format": "\u001b[90m \u001b[91m \u001b[92m \u001b[93m \u001b[94m \u001b[95m \u001b[96m \u001b[97m"
-    },
-    "break"
+      "format": "\u001b[38;2;247;118;142m󰊠 \u001b[38;2;255;158;100m󰊠 \u001b[38;2;224;175;104m󰊠 \u001b[38;2;158;206;106m󰊠 \u001b[38;2;125;207;255m󰊠 \u001b[38;2;122;162;247m󰊠 \u001b[38;2;187;154;247m󰊠 \u001b[38;2;192;202;245m󰊠\u001b[0m"
+    }
   ]
 }
