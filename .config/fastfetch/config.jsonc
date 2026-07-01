@@ -39,68 +39,68 @@
     {
       "type": "host",
       "key": "  󰌢  Machine  ",
-      "keyColor": "#7fa1f7"
+      "keyColor": "#7aa6f8"
     },
     {
       "type": "kernel",
       "key": "  󰌽  Kernel   ",
-      "keyColor": "#85a1f7"
+      "keyColor": "#7aaaf8"
     },
     "break",
     {
       "type": "packages",
       "key": "  󰏗  Packages ",
-      "keyColor": "#8aa0f7"
+      "keyColor": "#7badf9"
     },
     {
       "type": "wm",
       "key": "  󰖯  WM       ",
-      "keyColor": "#909ff7"
+      "keyColor": "#7bb1fa"
     },
     {
       "type": "shell",
       "key": "  󰞷  Shell    ",
-      "keyColor": "#959ff7"
+      "keyColor": "#7bb5fa"
     },
     {
       "type": "terminalfont",
       "key": "  󰛖  Font     ",
-      "keyColor": "#9a9ef7"
+      "keyColor": "#7cb8fb"
     },
     "break",
     {
       "type": "cpu",
       "key": "  󰻠  CPU      ",
-      "keyColor": "#a09df7"
+      "keyColor": "#7cbcfc"
     },
     {
       "type": "gpu",
       "key": "  󰍛  GPU      ",
-      "keyColor": "#a59df7"
+      "keyColor": "#7cc0fc"
     },
     {
       "type": "command",
       "key": "  󰑭  Memory   ",
-      "keyColor": "#ab9cf7",
+      "keyColor": "#7cc4fd",
       "text": "awk 'BEGIN{while((getline l < \"/proc/meminfo\")>0){split(l,a,\":\");v=a[2];gsub(/[^0-9]/,\"\",v);if(a[1]==\"MemTotal\")tot=v;if(a[1]==\"MemAvailable\")av=v}used=tot-av;pct=used/tot;W=16;f=int(pct*W+0.5);r1=122;g1=162;b1=247;r2=187;g2=154;b2=247;for(i=0;i<W;i++){t=i/(W-1);r=r1+(r2-r1)*t;g=g1+(g2-g1)*t;b=b1+(b2-b1)*t;if(i<f)printf\"\\033[38;2;%d;%d;%dm\\342\\243\\277\",r,g,b;else printf\"\\033[38;2;%d;%d;%dm\\342\\243\\200\",r*0.35,g*0.35,b*0.35}printf\"\\033[0m %.2f GiB\",tot/1048576}' "
     },
     "break",
     {
       "type": "command",
       "key": "  󰛳  Network  ",
-      "keyColor": "#b09bf7",
+      "keyColor": "#7cc8fe",
       "text": "iface=$(ip route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i==\"dev\"){print $(i+1);exit}}'); [ -z \"$iface\" ] && echo Disconnected || { [ -d \"/sys/class/net/$iface/wireless\" ] && echo \"Connected (WLAN)\" || echo \"Connected (LAN)\"; }"
     },
     {
       "type": "command",
       "key": "  󰖟  Internet ",
-      "keyColor": "#b69bf7",
+      "keyColor": "#7dcbfe",
       "text": "t=$(curl -sf -m 2 -o /dev/null -w \"%{time_total}\" https://1.1.1.1 2>/dev/null); [ -n \"$t\" ] && echo \"Reachable ($(awk \"BEGIN{printf \\\"%.0f\\\",$t*1000}\") ms)\" || echo \"Unreachable\""
     },
     {
       "type": "localip",
       "key": "  󰩟  Local IP ",
-      "keyColor": "#bb9af7",
+      "keyColor": "#7dcfff",
       "compact": true
     },
     "break",
