@@ -1,4 +1,14 @@
 #!/usr/bin/env bash
+#
+# fedora-setup.sh — Fedora workstation bootstrap
+# (packages, zsh, stow dotfiles, CLI tools, neovim)
+#
+# One-line install:
+#   curl -fsSL https://raw.githubusercontent.com/Fantasy1231/fedora-setup/main/bootstrap.sh | bash
+#
+# Options: --desktop | --headless | --sync   (auto-detects desktop by default)
+#   curl -fsSL https://raw.githubusercontent.com/Fantasy1231/fedora-setup/main/bootstrap.sh | bash -s -- --desktop
+#
 set -euo pipefail
 set +H
 export LC_ALL=C
@@ -656,5 +666,8 @@ main() {
   log_info "Log out and back in (or exec zsh) to switch to zsh."
 }
 
-[[ "${BASH_SOURCE[0]}" == "${0}" ]] && main "$@"
+# Run main when executed (normally or piped); skip only when sourced.
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]] || [[ -z "${BASH_SOURCE[0]:-}" ]]; then
+  main "$@"
+fi
 true
