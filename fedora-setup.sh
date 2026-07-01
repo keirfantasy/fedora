@@ -34,6 +34,43 @@ prompt_yes_no() {
   done
 }
 
+# Git identity: ~/.gitconfig.local (referenced by the dotfiles .gitconfig include).
+# Kept out of the public dotfiles repo, so it must be created per-machine.
+setup_gitconfig_local() {
+  local target="$HOME/.gitconfig.local"
+
+  if [[ -e "$target" ]]; then
+    log_info "  git identity: ~/.gitconfig.local exists — leaving as-is"
+    return 0
+  fi
+
+  local name="" email=""
+  log_info "Configuring git identity (~/.gitconfig.local)..."
+  # Only prompt if we have a terminal; otherwise fall through to the template stub.
+  if [[ -e /dev/tty ]]; then
+    read -rp "  Git user name  (blank = fill in later): " name < /dev/tty || true
+    read -rp "  Git email      (blank = fill in later): " email < /dev/tty || true
+  fi
+
+  if [[ -n "$name" && -n "$email" ]]; then
+    cat > "$target" <<EOF
+[user]
+	name = $name
+	email = $email
+EOF
+    log_info "  git identity written to $target"
+  else
+    cat > "$target" <<'EOF'
+# Local git identity — NOT tracked by the dotfiles repo.
+# Fill in and uncomment:
+#[user]
+#	name = Your Name
+#	email = you@example.com
+EOF
+    log_warn "  git identity left as a template — edit $target before committing"
+  fi
+}
+
 STOW_TARGETS=(
   ".config/alacritty"
   ".config/atuin"
@@ -213,6 +250,9 @@ phase3() {
   if (( has_conflicts )); then
     log_info "Backups saved to $backup_dir"
   fi
+
+  # Git identity (~/.gitconfig.local, referenced by the dotfiles .gitconfig include)
+  setup_gitconfig_local
 
   log_info "Phase 3 complete"
 }
