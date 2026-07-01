@@ -13,8 +13,6 @@ set -euo pipefail
 set +H
 export LC_ALL=C
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 DOTFILES_DIR="$HOME/Workspace/linux/dotfiles"
 
 # ---- PATH ----
@@ -26,12 +24,17 @@ log_info()  { printf '\033[1;34m%s\033[0m\n' "$*"; }
 log_warn()  { printf '\033[1;33m%s\033[0m\n' "$*"; }
 log_error() { printf '\033[1;31m%s\033[0m\n' "$*"; }
 
-prompt_yes_no() {
-  local answer
-  while true; do
-    read -rp "$1 [y/n]: " answer
-    case "${answer,,}" in y|yes) return 0 ;; n|no|"") return 1 ;; *) echo "Please answer y or n." ;; esac
-  done
+# ---- Sudo keep-alive ----
+# A single `sudo -v` expires after ~5 min; this refreshes it in the background
+# so long unattended runs never block on a password prompt mid-install.
+SUDO_KEEPALIVE_PID=""
+start_sudo_keepalive() {
+  ( while true; do sudo -n true 2>/dev/null; sleep 50; kill -0 "$$" 2>/dev/null || exit 0; done ) &
+  SUDO_KEEPALIVE_PID=$!
+  trap 'stop_sudo_keepalive' EXIT
+}
+stop_sudo_keepalive() {
+  [[ -n "$SUDO_KEEPALIVE_PID" ]] && kill "$SUDO_KEEPALIVE_PID" 2>/dev/null || true
 }
 
 # Git identity: ~/.gitconfig.local (referenced by the dotfiles .gitconfig include).
@@ -124,6 +127,7 @@ phase0() {
     exit 1
   fi
   sudo -v  # refresh sudo timestamp
+  start_sudo_keepalive  # keep sudo alive for the whole unattended run
 
   if ! command -v dnf &>/dev/null; then
     log_error "dnf is not available — this script targets Fedora only"
@@ -148,8 +152,10 @@ phase1() {
   local -a desktop_packages=()
 
   # Core
+  # Note: Rust toolchain is provided by rustup (phase 4), not distro cargo/rust,
+  # so those are intentionally omitted here to avoid a conflicting rustc on PATH.
   for pkg in zsh stow neovim git unzip fontconfig gcc make cmake curl wget perl \
-             python3 python3-pip python3-devel nodejs npm go cargo rust ruby ruby-devel php graphviz \
+             python3 python3-pip python3-devel nodejs npm go ruby ruby-devel php graphviz \
              ripgrep fd-find luarocks ImageMagick ghostscript htop \
              trash-cli tree net-tools bzip2 strace p7zip p7zip-plugins snapd flatpak; do
     if ! rpm -q "$pkg" &>/dev/null; then
@@ -178,7 +184,14 @@ phase1() {
   # ---- GitHub CLI ----
   if ! command -v gh &>/dev/null; then
     log_info "gh: adding GitHub CLI repo and installing..."
-    sudo dnf config-manager addrepo --from-repofile=https://cli.github.com/packages/rpm/gh-cli.repo
+    sudo dnf install -y dnf-plugins-core
+    local gh_repo="https://cli.github.com/packages/rpm/gh-cli.repo"
+    # dnf5 (Fedora 41+) uses `config-manager addrepo`; dnf4 uses `--add-repo`.
+    if sudo dnf config-manager addrepo --from-repofile="$gh_repo" 2>/dev/null; then
+      :
+    else
+      sudo dnf config-manager --add-repo "$gh_repo"
+    fi
     sudo dnf install -y gh
   fi
 
@@ -396,105 +409,55 @@ phase5() {
 # ----------------------------------------------------------------------
 # PHASE 6 — Neovim
 # ----------------------------------------------------------------------
+# nvim_headless_sync <restore|sync>
+#   restore = install exactly the pinned commits from lazy-lock.json (fresh provision)
+#   sync    = update plugins to latest and refresh the lockfile (maintenance)
+# Lazy + Treesitter run in a single nvim invocation so treesitter parsers are
+# only built after the plugins they depend on are installed (no cross-process race).
 nvim_headless_sync() {
-  echo "--- $(date) ---" >> /tmp/nvim-setup.log
+  local mode="${1:-restore}"
+  local lazy_cmd
+  case "$mode" in
+    sync) lazy_cmd='+Lazy! sync' ;;
+    *)    lazy_cmd='+Lazy! restore' ;;
+  esac
 
-  log_info "LazyVim: running headless sync..."
+  echo "--- $(date) ($mode) ---" >> /tmp/nvim-setup.log
+
+  log_info "Neovim: running headless $mode + treesitter update..."
   for attempt in 1 2; do
-    if nvim --headless '+Lazy! sync' +qa 2>>/tmp/nvim-setup.log; then
-      log_info "  LazyVim synced (attempt $attempt)"
+    if nvim --headless "$lazy_cmd" \
+         '+TSUpdateSync bash regex lua json yaml toml python javascript typescript' \
+         +qa 2>>/tmp/nvim-setup.log; then
+      log_info "  Neovim provisioned (attempt $attempt)"
       break
     else
-      log_warn "  LazyVim sync failed (attempt $attempt)"
+      log_warn "  Neovim provisioning failed (attempt $attempt)"
       if (( attempt == 2 )); then
-        log_error "  LazyVim sync failed after 2 attempts"
+        log_error "  Neovim provisioning failed after 2 attempts"
         log_error "  Log: /tmp/nvim-setup.log"
       fi
       sleep 5
     fi
-  done
-
-  log_info "Treesitter: updating parsers..."
-  for attempt in 1 2; do
-    if nvim --headless '+TSUpdateSync bash regex lua json yaml toml python javascript typescript' +qa 2>>/tmp/nvim-setup.log; then
-      log_info "  Treesitter parsers updated (attempt $attempt)"
-      break
-    elif (( attempt == 2 )); then
-      log_warn "  Treesitter update had issues after 2 attempts"
-      log_warn "  Log: /tmp/nvim-setup.log"
-    fi
-    sleep 3
   done
 }
 
 phase6() {
   log_info "--- Phase 6: Neovim ---"
 
-  local nvim_dir="$HOME/.config/nvim"
-  local init_lua="$nvim_dir/init.lua"
+  local init_lua="$HOME/.config/nvim/init.lua"
 
-  if [ ! -e "$init_lua" ]; then
-    # Fresh install: clone LazyVim starter
-    log_info "LazyVim starter: cloning..."
-    mkdir -p "$nvim_dir"
-    git clone https://github.com/LazyVim/starter "$nvim_dir"
-    rm -rf "$nvim_dir/.git"
-
-    # Add alpha dashboard
-    log_info "Alpha dashboard: adding..."
-    mkdir -p "$nvim_dir/lua/plugins"
-    cat > "$nvim_dir/lua/plugins/alpha.lua" <<'EOF'
-return {
-  "goolord/alpha-nvim",
-  opts = function(_, opts)
-    local logo = [[
-    -----------------     ---------------     ---------------   --------  --------
-    \\ . . . . . . .\\   //. . . . . . .\\   //. . . . . . .\\  \\. . .\\// . . //
-    ||. . ._____. . .|| ||. . ._____. . .|| ||. . ._____. . .|| || . . .\/ . . .||
-    || . .||   ||. . || || . .||   ||. . || || . .||   ||. . || ||. . . . . . . ||
-    ||. . ||   || . .|| ||. . ||   || . .|| ||. . ||   || . .|| || . | . . . . .||
-    || . .||   ||. _-|| ||-_ .||   ||. . || || . .||   ||. _-|| ||-_.|\ . . . . ||
-    ||. . ||   ||-'  || ||  `-||   || . .|| ||. . ||   ||-'  || ||  `|\_ . .|. .||
-    || . _||   ||    || ||    ||   ||_ . || || . _||   ||    || ||   |\ `-_/| . ||
-    ||_-' ||  .|/    || ||    \|.  || `-_|| ||_-' ||  .|/    || ||   | \  / |-_.||
-    ||    ||_-'      || ||      `-_||    || ||    ||_-'      || ||   | \  / |  `||
-    ||    `'         || ||         `'    || ||    `'         || ||   | \  / |   ||
-    ||            .---' `---.         .---'.`---.         .---' /--. |  \/  |   ||
-    ||         .--'   \_|-_ `---. .---'   _|_   `---. .---' _-|/   `--  \/  |   ||
-    ||      .--'    _-'    `-_  `-'    _-'   `-_    `-'  _-'   `-_  /|  \/  |   ||
-    ||   .--'    _-'          '-__\._-'         '-_./__-'         `' |. /|  |   ||
-    ||.--'    _-'                                                     `' |  /--.||
-    --'    _-'                        N E O V I M                         \/   `--
-    \   _-'                                                                `-_   /
-     `''                                                                      ``'
-    ]]
-    opts.section.header.val = vim.split(logo, "\n", { trimempty = true })
-  end,
-}
-EOF
-
-    local lv_json="$nvim_dir/lazyvim.json"
-    if [[ -f "$lv_json" ]]; then
-      python3 -c "
-import json
-p = '$lv_json'
-with open(p) as f: d = json.load(f)
-extras = d.get('extras', [])
-if 'lazyvim.plugins.extras.ui.alpha' not in extras:
-    extras.insert(0, 'lazyvim.plugins.extras.ui.alpha')
-d['extras'] = extras
-with open(p, 'w') as f: json.dump(d, f, indent=2)
-" && log_info "Alpha extra added to lazyvim.json"
-    fi
-
-    log_info "LazyVim starter installed"
-  elif [ -L "$init_lua" ]; then
+  if [ -L "$init_lua" ]; then
     log_info "Neovim config deployed via dotfiles stow"
+  elif [ -e "$init_lua" ]; then
+    log_warn "~/.config/nvim/init.lua exists but is not the stowed dotfiles config — leaving as-is"
   else
-    log_info "Existing ~/.config/nvim/init.lua found (real file) — leaving as-is"
+    log_error "Neovim config not found at $init_lua — did phase 3 (stow) run? Skipping nvim provisioning."
+    return
   fi
 
-  nvim_headless_sync
+  # Install plugins at their pinned versions (lazy-lock.json) and compile parsers.
+  nvim_headless_sync restore
 
   log_info "Phase 6 complete"
 }
@@ -506,7 +469,7 @@ with open(p, 'w') as f: json.dump(d, f, indent=2)
 install_rustup() {
   command -v rustc && return 0
   log_info "rustup: installing..."
-  curl --proto '-https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
   [[ -f "$HOME/.cargo/env" ]] && source "$HOME/.cargo/env"
   command -v rustc || { log_error "rustup install failed"; exit 1; }
 }
@@ -679,7 +642,7 @@ sync_main() {
   pip install --user --upgrade pip pynvim 2>/dev/null && log_info "  pip: OK" || log_warn "  pip: FAILED"
 
   log_info "--- Sync: neovim ---"
-  nvim_headless_sync
+  nvim_headless_sync sync
 
   log_info "--- Sync complete ---"
 }
