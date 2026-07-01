@@ -2,7 +2,7 @@
 #
 # Fedora setup: packages, zsh, dotfiles, CLI tools, neovim.
 #
-# Install:  curl -fsSL https://raw.githubusercontent.com/Fantasy1231/fedora-setup/main/bootstrap.sh | bash
+# Install:  curl -fsSL https://raw.githubusercontent.com/keirfantasy/fedora-setup/main/bootstrap.sh | bash
 # Options:  --desktop | --headless | --sync   (desktop auto-detected)
 #
 set -euo pipefail
@@ -230,7 +230,7 @@ phase3() {
   else
     log_info "Cloning dotfiles repo..."
     mkdir -p "$(dirname "$DOTFILES_DIR")"
-    git clone https://github.com/Fantasy1231/dotfiles.git "$DOTFILES_DIR"
+    git clone https://github.com/keirfantasy/dotfiles.git "$DOTFILES_DIR"
   fi
 
   if [[ ! -f "$DOTFILES_DIR/.stow-local-ignore" ]]; then

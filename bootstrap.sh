@@ -3,17 +3,17 @@
 # fedora-setup bootstrap
 #
 # Install:
-#   curl -fsSL https://raw.githubusercontent.com/Fantasy1231/fedora-setup/main/bootstrap.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/keirfantasy/fedora-setup/main/bootstrap.sh | bash
 #
 # Pass options through with `-s --`, e.g.:
-#   curl -fsSL https://raw.githubusercontent.com/Fantasy1231/fedora-setup/main/bootstrap.sh | bash -s -- --desktop
+#   curl -fsSL https://raw.githubusercontent.com/keirfantasy/fedora-setup/main/bootstrap.sh | bash -s -- --desktop
 #
 # Downloads fedora-setup.sh to a temp file and runs it with the terminal
 # attached, so sudo prompts still work even when this bootstrap is piped.
 #
 set -euo pipefail
 
-SCRIPT_URL="https://raw.githubusercontent.com/Fantasy1231/fedora-setup/main/fedora-setup.sh"
+SCRIPT_URL="https://raw.githubusercontent.com/keirfantasy/fedora-setup/main/fedora-setup.sh"
 
 command -v curl >/dev/null 2>&1 || {
   echo "error: curl is required" >&2
