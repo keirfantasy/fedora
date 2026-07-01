@@ -8,7 +8,7 @@
   },
   "logo": {
     "type": "builtin",
-    "source": "Fedora_small",
+    "source": "Fedora",
     "color": {
       "1": "#7aa2f7",
       "2": "#7dcfff"
