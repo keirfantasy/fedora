@@ -201,15 +201,27 @@ phase2() {
     sudo dnf install -y zsh
   fi
 
+  # Canonicalize (e.g. /usr/sbin/zsh -> /usr/bin/zsh on merged-sbin Fedora)
+  # so the passwd entry matches what /etc/shells lists.
   local zsh_path
-  zsh_path="$(command -v zsh)"
-  if [[ "$SHELL" != "$zsh_path" ]]; then
+  zsh_path="$(readlink -f "$(command -v zsh)")"
+  if ! grep -qx "$zsh_path" /etc/shells; then
+    log_warn "$zsh_path is not listed in /etc/shells — some tools may fall back to bash"
+  fi
+
+  local current_shell
+  current_shell="$(getent passwd "$USER" | cut -d: -f7)"
+  if [[ "$current_shell" != "$zsh_path" ]]; then
     sudo usermod -s "$zsh_path" "$USER"
     log_info "Default shell set to $zsh_path"
     log_info "Log out and back in, or run: exec zsh"
   else
     log_info "zsh is already the default shell"
   fi
+
+  # Make the rest of this run (and anything it spawns, e.g. a herdr server)
+  # inherit zsh instead of the stale login shell.
+  export SHELL="$zsh_path"
 
   log_info "Phase 2 complete"
 }
@@ -659,6 +671,10 @@ main() {
   echo
   log_info "--- Setup complete ---"
   log_info "Log out and back in (or exec zsh) to switch to zsh."
+  if command -v herdr &>/dev/null && [[ -S "$HOME/.config/herdr/herdr.sock" ]]; then
+    log_warn "A herdr server is running and caches the old \$SHELL —"
+    log_warn "run 'herdr server stop' so new panes pick up zsh."
+  fi
 }
 
 # Run main when executed (normally or piped); skip only when sourced.
